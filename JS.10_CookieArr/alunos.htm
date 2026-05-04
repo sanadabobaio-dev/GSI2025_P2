@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Next Generation Technology School</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1c1c1c;
+            color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #2b2b2b;
+            text-align: center;
+            padding: 20px;
+        }
+        header img {
+            height: 80px;
+        }
+        nav {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+        }
+        nav a {
+            color: #f5f5f5;
+            text-decoration: none;
+            padding: 15px;
+            display: block;
+        }
+        nav a:hover {
+            background-color: #555;
+        }
+        main {
+            padding: 20px;
+        }
+        .student-list, .student-form {
+            background-color: #2b2b2b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .student-item {
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+        }
+        .student-detail {
+            background-color: #3b3b3b;
+            margin: 5px 0 10px 30px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .toggle-btn {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="./images/logo.png" alt="Logo Next Generation">
+        <h1>Next Generation Technology School</h1>
+    </header>
+    <nav>
+        <a href="#home" onclick="showPage('home')">Início</a>
+        <a href="#register" onclick="showPage('register')">Registar Aluno</a>
+        <a href="#list" onclick="showPage('list')">Listar Alunos</a>
+    </nav>
+    <main>
+        <div id="home">
+            <h2>Bem-vindo à plataforma de gestão de alunos</h2>
+            <p>Utilize o menu acima para navegar.</p>
+        </div>
+
+        <div id="register" style="display:none;" class="student-form">
+            <h2>Registar Aluno</h2>
+            <input type="text" id="id" placeholder="Numero do Aluno">
+            <input type="text" id="name" placeholder="Nome do Aluno">
+            <input type="text" id="course" placeholder="Curso">
+            <button onclick="registerStudent()">Guardar</button>
+        </div>
+
+        <div id="list" style="display:none;" class="student-list">
+            <h2>Lista de Alunos</h2>
+            <div>
+                <label for="filterInput">Filtrar:</label>
+                <input type="text" id="filterInput" placeholder="Nome ou curso...">
+                
+                <label for="sortSelect">Ordenar por:</label>
+                <select id="sortSelect">
+                    <option value="name-asc">Nome (A-Z)</option>
+                    <option value="name-desc">Nome (Z-A)</option>
+                    <option value="course-asc">Curso (A-Z)</option>
+                    <option value="course-desc">Curso (Z-A)</option>
+                    <option value="numero-asc">Numero (- -> +)</option>
+                    <option value="numero-desc">Numero (+ -> -)</option>
+                </select>
+            </div>
+            <div id="studentList">
+            </div>
+        </div>
+    </main>
+
+    <script>
+/********************************************************************
+ * Variáveis Globais                                                *
+ ********************************************************************/        
+        let students = [];  
+        let expandedIndex = null;
+        let filterText = '';
+        let sortOption = 'name-asc';
+
+//  Carrega a lista de alunos a partir do cookie, se existir
+        const studentsCookie = getCookie("students");
+        if (studentsCookie) {
+            try {
+                students = JSON.parse(studentsCookie);
+            } catch (err) {
+                console.error("Error parsing stored array:", err);
+            }
+        } 
+//        console.log("Lista de alunos no início (inclui leitura de cookies):", students);
+    
+/********************************************************************
+ * Tratamento de Cookies                                            *
+ ********************************************************************/  
+	function setCookie(cookie_name,cookie_value,validade,opcoes = {}){
+		const enc = encodeURIComponent;
+
+        let cookie = enc(cookie_name) + '=' + enc(cookie_value);
+
+		if (typeof validade === 'number') {
+			cookie += '; Max-Age=' + validade * 24 * 60 * 60;
+  		}
+
+  		cookie += '; Path=' + (opcoes.path || '/');
+  		cookie += '; SameSite=' + (opcoes.sameSite || 'Lax');
+  		if (opcoes.secure) cookie += '; Secure';
+
+		console.log('SET -> ', enc(cookie_name), ' = ', cookie)
+  		document.cookie = cookie;
+	}
+
+	function getCookie(name) {
+		const enc = encodeURIComponent;
+		const prefix = enc(name) + "=";
+		const cookie = document.cookie
+			.split(';')		
+			.map(c => c.trim())		
+			.filter(c => c.startsWith(prefix))			
+			.map(c => decodeURIComponent(c.substring(prefix.length)))[0] || null;
+        console.log('GET ->', enc(name), ' = ', cookie);
+        return cookie;
+	}    
+
+/********************************************************************
+ * Renderização de página                                           *
+ ********************************************************************/
+        function showPage(page) {        
+            document.querySelectorAll('main > div').forEach(div => div.style.display = 'none');
+            document.getElementById(page).style.display = 'block';
+            if (page === 'list') updateStudentList();
+        }
+
+        function toggleDetail(index) {
+            expandedIndex = expandedIndex === index ? null : index;
+            updateStudentList();
+        }
+
+/********************************************************************
+ * Manipulação da lista de estudantes                               *
+ ********************************************************************/ 
+        function registerStudent() {
+            const id = document.getElementById('id').value;
+            const name = document.getElementById('name').value;
+            const course = document.getElementById('course').value;
+            if (id && name && course) {
+                students.push({ id, name, course });
+//  Actualizar cookie com lista de alunos
+//      JSON.stringify() converte array/objeto em string JSON
+//      O HMTL só permite cookies como string, o que obriga a esta conversão
+//      Para inverter a conversão, usa-se JSON.parse()
+                setCookie('students', JSON.stringify(students), 7);
+                /* Limpar formulário */
+                document.getElementById('id').value = '';
+                document.getElementById('name').value = '';
+                document.getElementById('course').value = '';
+                alert('Aluno registado com sucesso!');
+            } else {
+                alert('Por favor, preencha todos os campos.');
+            }
+        };
+// Atualiza os valores do filtro e ordenação
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('filterInput').addEventListener('input', (e) => {
+                filterText = e.target.value.toLowerCase();
+                updateStudentList();
+            });
+
+            document.getElementById('sortSelect').addEventListener('change', (e) => {
+                sortOption = e.target.value;
+                updateStudentList();
+            });
+        });
+ 
+        function updateStudentList() {
+//            console.log('Dados de alunos:', students);
+            const list = document.getElementById('studentList');
+            list.innerHTML = '';
+
+            // 1️⃣ Filtra os alunos
+            let filtered = students.filter(s =>
+                s.name.toLowerCase().includes(filterText) ||
+                s.course.toLowerCase().includes(filterText)
+            );
+
+            // 2️⃣ Ordena os alunos
+            filtered.sort((a, b) => {
+//            console.log('order:', sortOption);
+                const [rawKey, dir] = sortOption.split('-');                
+				
+				// Mapeia os nomes legíveis para os campos reais do objeto {php : bd}
+                const keyMap = {
+                    name: 'name',
+                    course: 'course',
+                    numero: 'id'
+                };
+
+                const key = keyMap[rawKey]; // traduz para o campo real
+//                const [key, dir] = sortOption.split('-');
+
+
+                const valA = (a[key] || '').toLowerCase();
+                const valB = (b[key] || '').toLowerCase();
+//            console.log('Keys:', valA, valB);
+
+                if (valA < valB) return dir === 'asc' ? -1 : 1;
+                if (valA > valB) return dir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // 3️⃣ Renderiza a lista
+            filtered.forEach((student, index) => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+
+                const toggleBtn = document.createElement('span');
+                toggleBtn.className = 'toggle-btn';
+                toggleBtn.textContent = expandedIndex === index ? '-' : '+';
+                toggleBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleDetail(index);
+                };
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = student.name || '[Sem Nome]';
+
+                item.appendChild(toggleBtn);
+                item.appendChild(nameSpan);
+                list.appendChild(item);
+
+                if (expandedIndex === index) {
+                    const detail = document.createElement('div');
+                    detail.className = 'student-detail';
+                    detail.textContent = `Numero: ${student.id}, Nome: ${student.name}, Curso: ${student.course}`;
+                    detail.textContent = `Numero: ${student.id}, Nome: ${student.name}, Curso: ${student.course}`;
+                    list.appendChild(detail);
+                }
+            });
+        };
+	
+    </script>
+</body>
+</html>

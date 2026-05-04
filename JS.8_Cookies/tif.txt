@@ -1,0 +1,5 @@
+Cache: %userprofile%\AppData\Local\Microsoft\Windows\Temporary Internet Files\Low
+Temp: %userprofile%\AppData\Local\Temp\Low
+Cookies: %userprofile%\AppData\Roaming\Microsoft\Windows\Cookies\Low
+History: %userprofile%\AppData\Local\Microsoft\Windows\History\Low
+

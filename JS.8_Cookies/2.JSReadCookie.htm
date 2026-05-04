@@ -1,0 +1,152 @@
+<html>
+	<head>
+	<title>uso de Javascript para validação de formulario</title>
+	
+		<style type="text/css">
+<!--
+			#frmNome{color:				blue;
+					 text-decoration: 	none;
+		 			 text-transform:	lowercase;
+					 font-family: 		verdana;
+					 font-size: 		14
+					}
+					
+			#frmApelido{color:				blue;
+					 text-decoration: 	none;
+		 			 text-transform:	lowercase;
+					 font-family: 		verdana;
+					 font-size: 		14
+					}
+
+			#status{color:				black;
+					 text-decoration: 	none;
+		 			 text-transform:	lowercase;
+					 font-family: 		verdana;
+					 font-size: 		10
+					}
+-->
+		</Style>
+
+	
+	<script type="text/javascript">
+	function verPreenche(campo){
+//função para verificar se um dado campo de preenchimento obrigatorio está preenchido
+		with (campo){
+			if (value==null||value==""){
+//				alert("vazio");
+				return false;
+				}
+//verifica-se se o campo está vazio ou se tem uma string nula
+			else{
+//				alert("preenchido");
+				return true;
+				}
+		}
+	}
+
+		function validarForm(formulario){
+			var valido=true;
+			var txtStatus="";
+			with (formulario){
+				if (verPreenche(nome)==false){
+//o campo do nome não está preenchido, alerta-se o utilizador				
+					nome.focus();
+					document.getElementById('frmNome').style.color='red';
+					txtStatus=txtStatus + "Nome nao esta preenchido<br>";
+					valido=false;
+					}
+				else{
+//o campo do nome está preenchido, repoem-se o formato original
+					document.getElementById('frmNome').style.color='blue';
+					}
+
+				if (verPreenche(apelido)==false){
+//o endereço de mail não está preenchido, alerta-se o utilizador				
+					txtStatus=txtStatus + "Apelido nao esta preenchido<br>";
+					document.getElementById('frmApelido').style.color='red';
+					valido=false;
+					}
+				else{
+//o endereço de mail está preenchido e é valido, repoem-se o formato original
+					document.getElementById('frmApelido').style.color='blue';
+					}
+			}
+
+			if (valido==false){
+				document.getElementById('status').innerHTML="<strong>Verifique preenchimento do formulario</strong><br>"+txtStatus+"*Campos de Preenchimento obrigatorio";
+//a manipulação de conteudos via JavaScript permite a inclusão de tags de HTML
+			}
+			return valido;
+		}
+
+//	Manipulação de cookies
+
+//	function getCookie(c_name){
+//		if (document.cookie.length>0){
+//			c_start=document.cookie.indexOf(c_name + "=");
+//			if (c_start!=-1){ 
+//			    c_start=c_start + c_name.length+1 ;
+//			    c_end=document.cookie.indexOf(";",c_start);
+//			    if (c_end==-1){
+//					c_end=document.cookie.length
+//				}
+//			    return unescape(document.cookie.substring(c_start,c_end));
+//		    } 
+//		}
+//		return ""
+//	}
+
+	function getCookie(name) {
+	const enc = encodeURIComponent;
+	const prefix = enc(name) + "=";
+	return document.cookie
+		.split(';')
+		.map(c => c.trim())
+		.filter(c => c.startsWith(prefix))
+		.map(c => decodeURIComponent(c.substring(prefix.length)))[0] || null;
+	}
+
+	function checkCookie(formulario){
+		nome=getCookie('nome');
+		if (nome!=null && nome!=""){
+			document.getElementById('nome').value=nome;
+		} else {
+			document.getElementById('nome').value="não há cookie";
+		}
+		
+		apelido=getCookie('apelido');
+		if (apelido!=null && apelido!=""){
+			document.getElementById('apelido').value=apelido;
+		} else {
+			document.getElementById('apelido').value="não há cookie";
+		}
+	}
+</script>
+</head>
+<!-- onLoad="checkCookie()"-->
+<body onLoad="checkCookie(this)">
+	<form onsubmit="return validarForm(this);" method="get">
+		<table align="center">
+			<tr id="frmNome">
+				<td align="right" width="75">Nome: </td>
+<!-- 'this' refere-se ao objecto identificado na TAG, i.e., ao FORM -->
+				<td align="left"><input type="text" name="nome" id="nome" size="30"></td>
+				<td align="left" width="25">*</td>
+			</tr>
+			<tr id="frmApelido" >
+				<td align="right">Apelido: </td>
+<!-- 'this' refere-se ao objecto identificado na TAG, i.e., ao FORM -->
+				<td align="left"><input type="text" name="apelido" id="apelido" size="30"></td>
+				<td align="left" width="25">*</td>
+			</tr>
+			<tr>
+				<td id="status" colspan="3">* preenchimeto obrigatorio</td>
+			</tr>
+			<tr>
+				<td colspan="3" align="center"><input type="submit" value="Continuar"></td>
+			</tr>
+		</table>
+	</form>
+</body>
+</html>
+
