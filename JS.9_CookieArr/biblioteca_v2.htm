@@ -250,16 +250,16 @@
                 setCookie('books', JSON.stringify(books), 7);
             }
 
-// Função para carregar os dados do localStorage
+// Função para carregar os dados do cookie
 // 1. com variavel gloabal predefinida (books) e atribuição direta
 //            function loadData() {
-//               const saved = localStorage.getItem("books");
+//               const saved = getCookie("books");
 //                books = saved ? JSON.parse(saved) : [];
 //            }
 
 // 2. com retorno de função e atribuição na chamada
             function loadData() {
-                const saved = localStorage.getItem("books");
+                const saved = getCookie("books");
 
                 if (saved === null) {
                     return [];
